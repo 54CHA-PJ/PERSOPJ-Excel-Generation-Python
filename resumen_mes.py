@@ -4,15 +4,23 @@ Fecha : 11/08/2023
 
 Sistema de gestion industrial en Python
 Programa realizado para gestiuonar en base a varios archivos Excel, una nueva tabla resumiendo sus valores.
+
+---------------------------------------------------
+Lista de las secciones de este codigo :
+- Inicio
+- Interfaz de Usuario
+- Recuperar Excel
+- Diccionario
+- Añadir y calcular datos
+- Bordes
+- Estética
+- Texto
+- Colores
+- Proteccion y Guardar el archivo
+--------------------------------------------------
 """
 
-# ___________________________________________________
-# ---------------------------------------------------
-# Inicio
-# ---------------------------------------------------
-
-import sys
-from tkinter import Tk, Frame, Label, Button, Entry, LEFT, RIGHT
+from tkinter import Tk, Frame, Label, Button, LEFT, RIGHT, filedialog
 from pandas import ExcelFile, read_excel
 from os import path, system
 from math import isnan, floor
@@ -24,21 +32,20 @@ from openpyxl.styles import Alignment, PatternFill, Side, Border, Font, Protecti
 # Interfaz de usuario
 # ---------------------------------------------------
 
-"""
-global nombre_excel 
-nombre_excel = "VENTAS AGOSTO 2023.xls"
-"""
+global excel_path
 
-def save_input():
-    global nombre_excel
-    nombre_excel = entry.get()
-    root.destroy()
-    
+def open_file():
+    global excel_path
+    excel_path = filedialog.askopenfilename(filetypes=[("Excel files", "*.xls *.xlsx")])
+    if excel_path:
+        root.destroy()
+
 def open_excel_file():  
     try:
-        system(f'start excel "{new_excel_name}"')
+        system(f'start excel "{new_excel_path}"')
     except Exception as e:
-        print("Error:", e)
+        # print("Error:", e)
+        pass
     root.destroy()
 
 def close_window():
@@ -59,30 +66,23 @@ root.attributes("-topmost", True)
 
 screen_width = root.winfo_screenwidth()
 screen_height = root.winfo_screenheight()
-window_width = 550
-window_height = 220
+window_width = 450
+window_height = 180
 window_x_position = floor((screen_width - window_width) / 2)
 window_y_position = floor((screen_height - window_height) / 2)
 root.geometry(f"{window_width}x{window_height}+{window_x_position}+{window_y_position}")
-
 tk_space()
-tk_print("Escriba el nombre del archivo Excel (incluyendo la extensión .xls // .xlsx) :")
+tk_print("Seleccione el archivo Excel:")
 tk_space()
-entry = Entry(root, width=40) 
-entry.pack()
+open_button = Button(root, text="Abrir", command=open_file)
+open_button.pack()
 tk_space()
-save_button = Button(root, text="Listo", command=save_input)
-save_button.pack()
-tk_print("Por ejemplo : VENTAS JULIO 2023.xls")
-tk_space()
-
-label_text_1 = "Por favor, si ya se ejecutó la aplicacion con su archivo, cierre la pagina Excel"
-label_text_2 = "llamada 'RESUMEN MENSUAL + nombre del archivo' para que se actualice correctamente"
+label_text_1 = "Si ya se ejecutó la aplicacion con su archivo, cierre la pagina Excel"
+label_text_2 = "llamada 'RESUMEN MENSUAL + nombre' para que se actualice correctamente"
 label = Label(root, text=label_text_1, font=("Helvetica", 8, "italic"))
 label.pack()
 label = Label(root, text=label_text_2, font=("Helvetica", 8, "italic"))
 label.pack()
-
 root.mainloop()
 
 # ___________________________________________________
@@ -178,55 +178,15 @@ def colorFill(color, r1, r2, c1, c2):
 grupo_paginas_dias = []
 grupo_paginas_limpias = []
 
-if getattr(sys, 'frozen', False):  # Check if running from executable
-    print("Code is executed from executable.\n")
-    current_directory = path.dirname(path.realpath(sys.executable))
-else:
-    print("")
-    print("Code is executed from Python script.\n\n---------------------------------------------------")
-    current_directory = path.dirname(path.realpath(__file__))
-
-    print(" Lista de las secciones de este codigo :\n")
-    print("- Inicio")
-    print("- Interfaz de Usuario")
-    print("- Recuperar Excel")
-    print("- Diccionario")
-    print("- Añadir y calcular datos")
-    print("- Bordes")
-    print("- Estética")
-    print("- Texto")
-    print("- Colores")
-    print("- Proteccion y Guardar el archivo\n---------------------------------------------------\n")
-
 try :
-    file_path = path.join(current_directory, nombre_excel)
-    with ExcelFile(file_path) as xls:
+    with ExcelFile(excel_path) as xls:
         for sheet_name in xls.sheet_names:
             df = read_excel(xls, sheet_name)
             pagina_dia = df.values.tolist()[:100]
             grupo_paginas_dias.append(pagina_dia)
 except FileNotFoundError :
-    pass
-"""
-    root = Tk()
-    root.title("Archivo Inexistente")
-    root.attributes("-topmost", True)
-    screen_width = root.winfo_screenwidth()
-    screen_height = root.winfo_screenheight()
-    window_width = 550
-    window_height = 150
-    window_x_position = floor((screen_width - window_width) / 2)
-    window_y_position = floor((screen_height - window_height) / 2)
-    root.geometry(f"{window_width}x{window_height}+{window_x_position}+{window_y_position}")
-    tk_space()
-    tk_print("El nombre del archivo es inexistente o no fué encontrado !")
-    tk_space()
-    tk_print("Asegúrese de poner la aplicacion (.exe) en la misma carpeta que el archivo Excel (.xls o .xlsx)")
-    tk_space()
-    close_button = Button(root, text="Ok", command=close_window)
-    close_button.pack()
-    root.mainloop()
-"""
+    raise("Archivo no encontrado !")
+
 # ___________________________________________________
 # ---------------------------------------------------
 # Limpiar los valores del excel
@@ -234,6 +194,8 @@ except FileNotFoundError :
 
 total_fecha = (grupo_paginas_dias[0])[1][8] 
 total_year  = (grupo_paginas_dias[0])[1][5] 
+
+# print(total_fecha)
 
 for matrix in grupo_paginas_dias:
     matrix_cleaned = cleanMatrix(matrix)
@@ -641,11 +603,13 @@ ws.protection.sheet = True
 for row in ws.iter_rows(min_row=tabla_h+9, max_row=tabla_h+40, min_col=1, max_col=tabla_w+40    ):
     for cell in row:
         cell.protection = Protection(locked=False)
-        
-if "xlsx" in nombre_excel :
-    new_excel_name = "RESUMEN MENSUAL " + nombre_excel
-else :
-    new_excel_name = "RESUMEN MENSUAL " + nombre_excel + "x"
+
+# Get the name and extension of the original Excel file
+excel_name, _ = path.splitext(path.basename(excel_path))
+new_excel_name = f"RESUMEN MENSUAL {excel_name}.xlsx"
+new_excel_path = path.join(path.dirname(excel_path), new_excel_name)
+
+excel_exists = path.exists(new_excel_path)
 
 # ___________________________________________________
 # ---------------------------------------------------
@@ -654,46 +618,26 @@ else :
 
 root = Tk()
 root.attributes("-topmost", True)
-screen_width = root.winfo_screenwidth()
-screen_height = root.winfo_screenheight()
-window_width = 550
-window_height = 150
-window_x_position = floor((screen_width - window_width) / 2)
-window_y_position = floor((screen_height - window_height) / 2)
-root.geometry(f"{window_width}x{window_height}+{window_x_position}+{window_y_position}")
+root.geometry(f"{550}x{100}+{floor((root.winfo_screenwidth() - 550) / 2)}+{floor((root.winfo_screenheight() - 100) / 2)}")
 
 try:
-    if path.exists(new_excel_name):
-        wb.save(new_excel_name)
-        root.title("Archivo actualizado !")
-        tk_space()
-        tk_print("El archivo Excel " + new_excel_name + " ya existente fué actualizado.")
-    else:
-        wb.save(new_excel_name)
-        root.title("Nuevo archivo creado !")
-        tk_space()
-        tk_print("Nuevo archivo Excel creado bajo el nombre de : " + new_excel_name)
+    wb.save(new_excel_path)
+    root.title("Archivo actualizado !" if excel_exists else "Nuevo archivo creado !")
+    tk_space()
+    tk_print(f"El archivo Excel {new_excel_name} {'ya existente fue actualizado !' if excel_exists else 'fue creado exitosamente !'}")    
     tk_space()
     button_frame = Frame(root)
     button_frame.pack()
-    open_button = Button(button_frame, text="Abrir Excel", command=open_excel_file)
-    open_button.pack(side=LEFT)
-    close_button = Button(button_frame, text="Ok", command=close_window)
-    close_button.pack(side=RIGHT)
+    Button(button_frame, text="Abrir Excel", command=open_excel_file).pack(side=LEFT, padx=10)
+    Button(button_frame, text="Ok", command=close_window).pack(side=RIGHT, padx=10)
     root.mainloop()
     
 except PermissionError:
-        root.title("Por favor cierre el archivo Excel antes de ejecutar")
-        tk_space()
-        tk_print("Por favor cierre el archivo " + new_excel_name + " antes de ejecutar !")
-        tk_space()
-        tk_print("No se olvide de guardar los cambios que hizo a la hoja bajo otro nombre")
-        tk_space()
-        close_button = Button(root, text="Ok", command=close_window)
-        close_button.pack()
-        root.mainloop()
-
-"""
-wb.save(new_excel_name)
-system(f'start excel "{new_excel_name}"')
-"""
+    root.title("Por favor cierre el archivo Excel antes de ejecutar")
+    tk_space()
+    tk_print(f"Por favor cierre el archivo {new_excel_name} antes de ejecutar !")
+    tk_space()
+    tk_print("No se olvide de guardar los cambios que hizo a la hoja bajo otro nombre")
+    tk_space()
+    Button(root, text="Ok", command=close_window).pack()
+    root.mainloop()

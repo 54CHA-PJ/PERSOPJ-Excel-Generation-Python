@@ -1,11 +1,8 @@
 # -*- mode: python ; coding: utf-8 -*-
-import sys ; sys.setrecursionlimit(sys.getrecursionlimit() * 5)
-
-block_cipher = None
 
 
 a = Analysis(
-    ['resumen_mes_v7.py'],
+    ['resumen_mes.py'],
     pathex=[],
     binaries=[],
     datas=[],
@@ -14,21 +11,17 @@ a = Analysis(
     hooksconfig={},
     runtime_hooks=[],
     excludes=[],
-    win_no_prefer_redirects=False,
-    win_private_assemblies=False,
-    cipher=block_cipher,
     noarchive=False,
 )
-pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
+pyz = PYZ(a.pure)
 
 exe = EXE(
     pyz,
     a.scripts,
     a.binaries,
-    a.zipfiles,
     a.datas,
     [],
-    name='resumen_mes_v7',
+    name='resumen_mes',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

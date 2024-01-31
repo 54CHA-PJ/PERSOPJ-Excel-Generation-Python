@@ -2,3 +2,5 @@
 *.xls
 *.csv
 *.exe
+dist
+build
